@@ -1,0 +1,45 @@
+# Firebase App Hosting configuration for this Next.js app.
+# App Hosting runs Next.js as a real Node.js server on Cloud Run (not
+# classic static Firebase Hosting, which can't run Server Actions or
+# Route Handlers) — this is the correct Firebase product for this app.
+#
+# Requires the Blaze (pay-as-you-go) plan to enable at all, unlike
+# Netlify/Vercel's free tiers — see the README's hosting section for
+# the cost tradeoff before you pick this over an alternative.
+#
+# Before your first deploy, store the four values from .env.example as
+# secrets (never commit real values here):
+#   firebase apphosting:secrets:set NEXT_PUBLIC_SUPABASE_URL
+#   firebase apphosting:secrets:set NEXT_PUBLIC_SUPABASE_ANON_KEY
+#   firebase apphosting:secrets:set SUPABASE_SERVICE_ROLE_KEY
+#   firebase apphosting:secrets:set NEXT_PUBLIC_SITE_URL
+#   firebase apphosting:secrets:grantaccess NEXT_PUBLIC_SUPABASE_URL --backend=<your-backend-id>
+#   (repeat grantaccess for the other three secret names)
+
+runConfig:
+  minInstances: 0 # scale to zero between visits -- keeps cost near $0 at this app's scale
+  maxInstances: 2
+  concurrency: 80
+  cpu: 1
+  memoryMiB: 512
+
+env:
+  - variable: NEXT_PUBLIC_SUPABASE_URL
+    secret: NEXT_PUBLIC_SUPABASE_URL
+    availability:
+      - BUILD
+      - RUNTIME
+  - variable: NEXT_PUBLIC_SUPABASE_ANON_KEY
+    secret: NEXT_PUBLIC_SUPABASE_ANON_KEY
+    availability:
+      - BUILD
+      - RUNTIME
+  - variable: SUPABASE_SERVICE_ROLE_KEY
+    secret: SUPABASE_SERVICE_ROLE_KEY
+    availability:
+      - RUNTIME
+  - variable: NEXT_PUBLIC_SITE_URL
+    secret: NEXT_PUBLIC_SITE_URL
+    availability:
+      - BUILD
+      - RUNTIME

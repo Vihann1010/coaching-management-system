@@ -415,4 +415,5 @@ If you grow well past that, the natural next step is pushing fee-status filterin
 `WHERE` clause (it would need a computed column or a slightly heavier query) — flagged here so
 it's a known, deliberate tradeoff rather than a surprise.
 #   c o a c h i n g - m a n a g e m e n t - s y s t e m  
+ #   c o a c h i n g - m a n a g e m e n t - s y s t e m  
  

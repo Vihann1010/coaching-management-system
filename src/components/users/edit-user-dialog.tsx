@@ -21,6 +21,7 @@ const STAFF_MODULES: PermissionModule[] = ["students", "fees", "attendance", "te
 const MODULE_LABEL: Record<PermissionModule, string> = {
   students: "Students", fees: "Fees", attendance: "Attendance", tests: "Tests",
   batches: "Batches", reports: "Reports", users: "Users", settings: "Settings", audit_logs: "Audit Logs",
+  assistant: "Assistant",
 };
 
 export function EditUserDialog({

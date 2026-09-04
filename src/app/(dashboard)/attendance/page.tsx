@@ -26,7 +26,8 @@ export default async function AttendancePage({
   );
 
   const { batch: batchParam, date: dateParam } = await searchParams;
-  const attendanceDate = dateParam ?? new Date().toISOString().slice(0, 10);
+  const today = new Date().toISOString().slice(0, 10);
+  const attendanceDate = dateParam ?? today;
 
   const supabase = await createClient();
 
@@ -87,7 +88,7 @@ export default async function AttendancePage({
         }
       />
 
-      <BatchDatePicker batches={batches} />
+      <BatchDatePicker batches={batches} today={today} />
 
       {!batchId || !students ? (
         <EmptyState icon={Layers} title="Select a batch to begin" />

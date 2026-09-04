@@ -21,8 +21,7 @@ export async function GET(request: Request) {
   const search = searchParams.get("search")?.trim() ?? "";
   const batch = searchParams.get("batch") ?? "";
   const feeStatusFilter = searchParams.get("feeStatus") ?? "";
-  const statusParam = searchParams.get("status");
-  const status = statusParam === "inactive" || statusParam === "all" ? statusParam : "active";
+  const status = searchParams.get("status") ?? "active";
 
   const supabase = await createClient();
   const settings = await getAppSettings();

@@ -17,17 +17,17 @@ export interface PermissionContext {
   teacherBatchIds?: string[];
 }
 
-const ADMIN_ONLY_MODULES: PermissionModule[] = ["users", "settings", "audit_logs"];
+const ADMIN_ONLY_MODULES: PermissionModule[] = ["users", "settings", "audit_logs", "assistant"];
 
 const ROLE_DEFAULT_VIEW: Record<UserRole, PermissionModule[]> = {
-  admin: ["students", "fees", "attendance", "tests", "batches", "reports", "users", "settings", "audit_logs"],
+  admin: ["students", "fees", "attendance", "tests", "batches", "reports", "users", "settings", "audit_logs", "assistant"],
   accountant: ["students", "fees", "reports", "batches"],
   teacher: ["students", "attendance", "tests", "batches", "reports"],
   staff: ["batches"], // everything else is opt-in via user_permissions
 };
 
 const ROLE_DEFAULT_EDIT: Record<UserRole, PermissionModule[]> = {
-  admin: ["students", "fees", "attendance", "tests", "batches", "reports", "users", "settings", "audit_logs"],
+  admin: ["students", "fees", "attendance", "tests", "batches", "reports", "users", "settings", "audit_logs", "assistant"],
   accountant: ["fees", "students"], // students: fee-fields, see README note
   teacher: ["attendance", "tests"],
   staff: [],
@@ -66,6 +66,7 @@ export function canViewBatch(ctx: PermissionContext, batchId: string | null): bo
 
 export const NAV_ITEMS: Array<{ label: string; href: string; module: PermissionModule }> = [
   { label: "Dashboard", href: "/dashboard", module: "reports" },
+  { label: "Assistant", href: "/assistant", module: "assistant" },
   { label: "Students", href: "/students", module: "students" },
   { label: "Fees", href: "/fees", module: "fees" },
   { label: "Attendance", href: "/attendance", module: "attendance" },

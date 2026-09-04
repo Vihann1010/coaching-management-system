@@ -2,7 +2,7 @@ import Link from "next/link";
 import {
   Users, UserCheck, Layers, CalendarCheck, CalendarX, Wallet, AlertCircle,
   ClipboardList, UserPlus, Wallet as WalletIcon, CheckSquare, FilePlus,
-  TrendingUp, ArrowRight,
+  TrendingUp, ArrowRight, AudioWaveform,
 } from "lucide-react";
 import { getSessionContext } from "@/lib/session";
 import { canView } from "@/lib/permissions";
@@ -103,6 +103,21 @@ export default async function DashboardPage() {
         title={`Welcome back, ${ctx.profile.full_name.split(" ")[0]}`}
         description="Here's what's happening at your coaching today."
       />
+
+      {ctx.profile.role === "admin" && (
+        <Link
+          href="/assistant"
+          className="mb-6 flex items-center gap-4 rounded-lg border border-[var(--brand-200)] bg-[var(--brand-50)] p-4 transition-colors hover:bg-[var(--brand-100)]"
+        >
+          <span className="flex size-11 shrink-0 items-center justify-center rounded-md bg-[var(--brand-600)] text-white">
+            <AudioWaveform className="size-6 text-green-300" />
+          </span>
+          <span className="min-w-0">
+            <span className="block font-[family-name:var(--font-display)] font-bold text-[var(--brand-900)]">Trippy-Your Ai Staff</span>
+            <span className="block text-sm text-muted-foreground">Ask about students, attendance, fees, or test marks.</span>
+          </span>
+        </Link>
+      )}
 
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
         {showStudents && (

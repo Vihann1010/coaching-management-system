@@ -4,7 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   LayoutDashboard, Users, Wallet, CalendarCheck, ClipboardList,
-  Layers, BarChart3, UserCog, History, Settings, X,
+  Layers, BarChart3, UserCog, History, Settings, X, AudioWaveform,
 } from "lucide-react";
 import { LogoWithName } from "@/components/shared/logo";
 import { cn } from "@/lib/utils";
@@ -12,6 +12,7 @@ import type { PermissionModule } from "@/types/database";
 
 const ICONS: Record<string, typeof LayoutDashboard> = {
   "/dashboard": LayoutDashboard,
+  "/assistant": AudioWaveform,
   "/students": Users,
   "/fees": Wallet,
   "/attendance": CalendarCheck,
@@ -77,7 +78,7 @@ export function Sidebar({
               aria-current={active ? "page" : undefined}
             >
               <Icon className="size-4.5 shrink-0" />
-              {item.label}
+              {item.href === "/assistant" ? "Trippy-Your Ai Staff" : item.label}
             </Link>
           );
         })}

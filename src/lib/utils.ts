@@ -19,6 +19,7 @@ export function formatDate(dateStr: string | null | undefined) {
     day: "2-digit",
     month: "short",
     year: "numeric",
+    timeZone: "UTC",
   });
 }
 
@@ -30,6 +31,7 @@ export function formatDateTime(dateStr: string | null | undefined) {
     year: "numeric",
     hour: "2-digit",
     minute: "2-digit",
+    timeZone: "Asia/Kolkata",
   });
 }
 

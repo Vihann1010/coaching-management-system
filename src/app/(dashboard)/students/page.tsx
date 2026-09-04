@@ -37,7 +37,7 @@ export default async function StudentsPage({
   const search = params.search?.trim() ?? "";
   const batchFilter = params.batch ?? "";
   const feeStatusFilter = (params.feeStatus ?? "") as FeeStatus | "";
-  const statusFilter = params.status === "inactive" || params.status === "all" ? params.status : "active";
+  const statusFilter = params.status ?? "active";
   const page = Math.max(1, Number(params.page) || 1);
 
   const supabase = await createClient();

@@ -2,7 +2,6 @@
 
 import { createClient } from "@/lib/supabase/server";
 import { settingsSchema } from "@/lib/validations";
-import { getSessionContext } from "@/lib/session";
 import { revalidatePath } from "next/cache";
 
 export interface SettingsActionState {
@@ -20,12 +19,8 @@ export async function updateSettingsAction(_prev: SettingsActionState, formData:
     return { fieldErrors: out };
   }
 
-  const ctx = await getSessionContext();
-  if (ctx.profile.role !== "admin") {
-    return { error: "Only an admin can change these settings." };
-  }
-
   const supabase = await createClient();
+  const { data: userRes } = await supabase.auth.getUser();
 
   const logoUrl = String(formData.get("logo_url") || "").trim();
 
@@ -37,11 +32,11 @@ export async function updateSettingsAction(_prev: SettingsActionState, formData:
     { key: "currency", value: parsed.data.currency },
     { key: "fee_overdue_days", value: parsed.data.fee_overdue_days },
     { key: "logo_url", value: logoUrl || null },
-  ].map((r) => ({ key: r.key, value: r.value, updated_by: ctx.userId }));
+  ].map((r) => ({ key: r.key, value: r.value, updated_by: userRes.user?.id }));
 
   const { error } = await supabase.from("app_settings").upsert(rows, { onConflict: "key" });
 
-  if (error) return { error: `Couldn't save settings: ${error.message}` };
+  if (error) return { error: "Couldn't save settings. Only an admin can change these." };
 
   revalidatePath("/settings");
   revalidatePath("/login");

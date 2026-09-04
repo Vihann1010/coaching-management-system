@@ -10,7 +10,6 @@ import { X } from "lucide-react";
 import type { Batch } from "@/types/database";
 
 const ALL = "__all__";
-const ALL_STATUS = "all";
 
 export function StudentsFilters({ batches }: { batches: Pick<Batch, "id" | "name" | "code">[] }) {
   const router = useRouter();
@@ -19,10 +18,8 @@ export function StudentsFilters({ batches }: { batches: Pick<Batch, "id" | "name
 
   function setParam(key: string, value: string | null) {
     const params = new URLSearchParams(searchParams.toString());
-    if (!value || (value === ALL && key !== "status")) {
+    if (!value || value === ALL) {
       params.delete(key);
-    } else if (key === "status" && value === ALL_STATUS) {
-      params.set(key, ALL_STATUS);
     } else {
       params.set(key, value);
     }
@@ -30,7 +27,7 @@ export function StudentsFilters({ batches }: { batches: Pick<Batch, "id" | "name
     router.push(`${pathname}?${params.toString()}`);
   }
 
-  const hasFilters = ["search", "batch", "feeStatus", "status"].some((k) => searchParams.get(k));
+  const hasFilters = ["search", "batch", "feeStatus", "attendance", "status"].some((k) => searchParams.get(k));
 
   return (
     <div className="flex flex-wrap items-center gap-2 mb-4">
@@ -62,15 +59,12 @@ export function StudentsFilters({ batches }: { batches: Pick<Batch, "id" | "name
         </SelectContent>
       </Select>
 
-      <Select
-        value={searchParams.get("status") ?? "active"}
-        onValueChange={(v) => setParam("status", v)}
-      >
+      <Select value={searchParams.get("status") ?? "active"} onValueChange={(v) => setParam("status", v)}>
         <SelectTrigger className="w-36"><SelectValue /></SelectTrigger>
         <SelectContent>
           <SelectItem value="active">Active only</SelectItem>
           <SelectItem value="inactive">Inactive only</SelectItem>
-          <SelectItem value={ALL_STATUS}>All students</SelectItem>
+          <SelectItem value={ALL}>All students</SelectItem>
         </SelectContent>
       </Select>
 

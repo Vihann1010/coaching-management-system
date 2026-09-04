@@ -75,7 +75,16 @@ async function main() {
   console.log("Seeding demo data...\n");
 
   console.log("Creating demo users:");
-  const adminId = await createDemoUser("admin@demo.coaching", "Anjali Owner", "admin");
+  const adminId = await createDemoUser("admin@demo.coaching", "Vidhan Srivastava", "admin");
+  const { error: adminProfileError } = await admin
+    .from("profiles")
+    .update({ full_name: "Vidhan Srivastava" })
+    .eq("id", adminId);
+  if (adminProfileError) throw new Error(`Updating admin profile: ${adminProfileError.message}`);
+  const { error: adminMetadataError } = await admin.auth.admin.updateUserById(adminId, {
+    user_metadata: { full_name: "Vidhan Srivastava", role: "admin" },
+  });
+  if (adminMetadataError) throw new Error(`Updating admin account: ${adminMetadataError.message}`);
   const accountantId = await createDemoUser("accountant@demo.coaching", "Rakesh Accountant", "accountant");
   const teacherId = await createDemoUser("teacher@demo.coaching", "Sunita Teacher", "teacher");
   const staffId = await createDemoUser("staff@demo.coaching", "Vikram Staff", "staff");

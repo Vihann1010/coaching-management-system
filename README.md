@@ -13,7 +13,7 @@ Level Security, Realtime)**.
 
 This is real, working application code — not a mockup. Every button is wired to a real Server
 Action or query; there are no placeholder screens. That said, an honest inventory matters more
-than a sales pitch, so **section 13 below (Production Readiness Checklist) tells you exactly
+than a sales pitch, so **section 14 below (Production Readiness Checklist) tells you exactly
 what's fully built, what's partial, and what's a documented gap.** Read that before going live.
 
 What I could **not** do from this environment: create your Supabase/Vercel accounts, click
@@ -39,7 +39,7 @@ database serve whichever device opens it. There's nothing extra to build or inst
 - **The layout adapts to screen size**: the sidebar becomes a swipe-out drawer on phones, forms
   stack into a single column, and dense tables (like the students list) scroll sideways with a
   swipe rather than squeezing columns unreadably small.
-- **"Add to Home Screen" gives it a real app icon.** Once deployed (section 12), open the site
+- **"Add to Home Screen" gives it a real app icon.** Once deployed (section 13), open the site
   in Safari on iPhone or Chrome on Android:
   - **iPhone (Safari)**: tap the Share icon → **Add to Home Screen**.
   - **Android (Chrome)**: tap the ⋮ menu → **Add to Home Screen** / **Install app**.
@@ -49,7 +49,7 @@ database serve whichever device opens it. There's nothing extra to build or inst
   everyone automatically).
 
 **The one thing that makes "from anywhere, anytime" literally true: it needs to be deployed to a
-real URL** (section 12), not just run on your own laptop via `npm run dev`. Running it locally
+real URL** (section 13), not just run on your own laptop via `npm run dev`. Running it locally
 only makes it reachable from that one laptop, on that one network. Deploying it to Vercel (free,
 ~10 minutes, no code changes needed) gives it a public `https://` address any phone or desktop
 with internet access can reach.
@@ -64,7 +64,8 @@ coaching-cms/
 │       ├── 0002_rls_policies.sql      # Row Level Security — the real permission boundary
 │       ├── 0003_audit_triggers.sql    # Audit log triggers on every business table
 │       ├── 0004_rpc_functions.sql     # Bulk-upsert helpers for attendance/marks entry
-│       └── 0005_realtime.sql          # Enables multi-device live sync
+│       ├── 0005_realtime.sql          # Enables multi-device live sync
+│       └── 0006_assistant_module.sql  # Registers the "assistant" permission module
 ├── scripts/
 │   └── seed.ts                 # Demo data generator (npm run seed)
 ├── src/
@@ -72,6 +73,7 @@ coaching-cms/
 │   │   ├── login/               # Auth
 │   │   ├── (dashboard)/         # Everything behind login, with the sidebar shell
 │   │   │   ├── dashboard/
+│   │   │   ├── assistant/       # Admin: AI data-lookup chatbot
 │   │   │   ├── students/        # List, profile (tabs), new/edit forms
 │   │   │   ├── fees/            # Payment ledger
 │   │   │   ├── attendance/      # Batch+date marking, absentee follow-up
@@ -87,6 +89,7 @@ coaching-cms/
 │   │   ├── layout/               # Sidebar, header, shell
 │   │   └── <module>/             # Feature-specific components
 │   ├── lib/
+│   │   ├── ai/                   # AI Assistant: shared tools + Claude/Gemini provider adapters
 │   │   ├── supabase/             # Browser / server / middleware / admin clients
 │   │   ├── calculations.ts       # Fee, attendance %, marks % — pure & unit-tested
 │   │   ├── permissions.ts        # UI-level role/permission checks (mirrors RLS)
@@ -242,7 +245,7 @@ If you have an existing spreadsheet of 500 students and need a real bulk-import 
 ships, the fastest route is: export your sheet to CSV, and have a developer run a short one-off
 script against `scripts/seed.ts` as a template (swap the demo data generation for `Papa.parse()`
 over your CSV, keep the validation and insert logic). This is a well-scoped follow-up — see
-section 13.
+section 14.
 
 ---
 
@@ -255,7 +258,69 @@ unmaintained `xlsx` package (see security note below).
 
 ---
 
-## 12. Deploying to production
+## 12. AI Assistant (admin chatbot for quick lookups)
+
+There's an **Assistant** page (admin-only) where you can ask plain-English questions and get
+answers pulled from your live data — "How many students were present today?", "What are Priya's
+test marks?", "Who has the highest pending fees?". It works with **either Claude (Anthropic) or
+Gemini (Google)** — pick whichever you'd rather set up; you only need one.
+
+### How it's built to be safe
+
+This is the part worth actually understanding before you turn it on, since it's the one feature
+in the app that involves sending data to a third party (whichever AI provider you pick) rather
+than staying entirely inside your Supabase project:
+
+- **It's tool-based, not "write any SQL it wants."** The assistant has exactly 8 predefined,
+  read-only lookup functions (search students, get attendance for a date, get fee summary, get
+  test marks, etc.) — see `src/lib/ai/tools.ts`. It can only call these; it cannot query arbitrary
+  tables or columns, and there is no "run this SQL" tool at all. Both providers share this exact
+  same set of 8 tools — switching providers doesn't change what data it can reach.
+- **It cannot write, only read.** None of the 8 tools perform an insert/update/delete. Even if
+  you ask it to "mark student X absent" or "add a payment," it's physically incapable of doing
+  so — there's no tool for that, so it will tell you to do it from the relevant screen instead.
+- **Row Level Security still applies.** The assistant queries through the same authenticated
+  Supabase client every other page uses (not the service-role key), so it's still bound by the
+  RLS policies in `0002_rls_policies.sql`.
+- **Admin-only**, like Users/Settings/Audit Logs. The Server Action re-checks this itself
+  (`src/app/(dashboard)/assistant/actions.ts`), not just the page, in case that ever changes.
+- **Always current data.** Every question triggers a fresh database query — there's no caching
+  or stale snapshot, so "how many present today" reflects attendance marked five minutes ago.
+- Conversation history lives only in your browser tab (React state) — it's not saved to the
+  database, so it resets on refresh. That's a deliberate scope decision, not a bug.
+
+### Setup (optional feature — skip this if you don't want it)
+
+Pick **one** of the two:
+
+**Option 1 — Gemini (Google)**, if you want to start free:
+1. Go to [aistudio.google.com/apikey](https://aistudio.google.com/apikey), sign in with a Google
+   account, and generate an API key. Gemini has a genuine free tier at low request volumes — no
+   card required to get started, unlike the Anthropic option below.
+2. Add to your environment variables:
+   ```
+   GEMINI_API_KEY=AI...
+   ```
+
+**Option 2 — Claude (Anthropic)**:
+1. Create an account at [console.anthropic.com](https://console.anthropic.com) and generate an
+   API key. **This is a paid API** — billed per question asked, separate from any Claude.ai
+   subscription, and it requires adding a payment method. At the scale of an internal tool used
+   by one admin asking a handful of questions a day, actual cost is small (typically well under
+   $1-2/month), but it's not $0 the way Gemini's free tier can be.
+2. Add to your environment variables:
+   ```
+   ANTHROPIC_API_KEY=sk-ant-...
+   ```
+
+Either way: that's it — the **Assistant** link appears in the sidebar for admins once a key is
+set. If neither is configured, the page tells you exactly that instead of failing silently. If
+you set both keys, Anthropic is used by default — add `AI_PROVIDER=gemini` to prefer Gemini
+instead. Want a different model than the default for whichever provider you picked? Set
+`ANTHROPIC_MODEL=claude-haiku-4-5-20251001` (cheaper/faster Claude) or `GEMINI_MODEL=...`
+alongside the relevant key.
+
+## 13. Deploying to production
 
 **Important first: one database, any hosting platform.** No matter which option below you pick,
 your Supabase project (database, auth, storage) stays exactly the same — you're only choosing
@@ -327,11 +392,11 @@ likely to stay within the free monthly quota. Vercel and Netlify's free tiers do
   sampled to match the brand green (`#00923F`) used throughout the sidebar, buttons, badges, and
   Excel export headers. To swap it later, just replace `public/logo.png` (or add `public/logo.svg`,
   which takes priority if present) and redeploy.
-- **Production security checklist** before go-live: see section 13.
+- **Production security checklist** before go-live: see section 14.
 
 ---
 
-## 13. Production Readiness Checklist
+## 14. Production Readiness Checklist
 
 ### Fully implemented and tested
 - Email/password authentication via Supabase Auth, with route protection in middleware
@@ -361,6 +426,9 @@ likely to stay within the free monthly quota. Vercel and Netlify's free tiers do
   hard-coded coaching name anywhere in the UI
 - Multi-device realtime sync via Supabase Realtime (spec section 23) — a change on one device
   refreshes the relevant screen on another within about a second, still gated by RLS
+- AI Assistant (admin-only): natural-language lookups over live attendance/fees/marks data via 8
+  fixed read-only tools shared across both a Claude and a Gemini provider adapter — no free-text
+  SQL generation, no write capability, still bound by RLS (see section 12 for the full safety design)
 - Responsive layout (mobile drawer nav, sticky table headers, horizontal scroll on dense tables),
   installable as a home-screen app on iOS/Android via `manifest.webmanifest`, with touch targets
   sized for one-handed use on the highest-frequency mobile action (marking attendance)
@@ -414,6 +482,3 @@ over-engineering a fully server-side-paginated fee-status filter for a scale you
 If you grow well past that, the natural next step is pushing fee-status filtering into a SQL
 `WHERE` clause (it would need a computed column or a slightly heavier query) — flagged here so
 it's a known, deliberate tradeoff rather than a surprise.
-#   c o a c h i n g - m a n a g e m e n t - s y s t e m  
- #   c o a c h i n g - m a n a g e m e n t - s y s t e m  
- 

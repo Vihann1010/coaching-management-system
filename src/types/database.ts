@@ -14,7 +14,8 @@ export type PermissionModule =
   | "reports"
   | "users"
   | "settings"
-  | "audit_logs";
+  | "audit_logs"
+  | "assistant";
 
 export interface Profile {
   id: string;

@@ -6,7 +6,13 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import type { Batch } from "@/types/database";
 
-export function BatchDatePicker({ batches }: { batches: Pick<Batch, "id" | "name" | "code">[] }) {
+export function BatchDatePicker({
+  batches,
+  today,
+}: {
+  batches: Pick<Batch, "id" | "name" | "code">[];
+  today: string;
+}) {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -35,8 +41,8 @@ export function BatchDatePicker({ batches }: { batches: Pick<Batch, "id" | "name
         <Input
           type="date"
           className="w-44"
-          value={searchParams.get("date") ?? new Date().toISOString().slice(0, 10)}
-          max={new Date().toISOString().slice(0, 10)}
+          value={searchParams.get("date") ?? today}
+          max={today}
           onChange={(e) => setParam("date", e.target.value)}
         />
       </div>

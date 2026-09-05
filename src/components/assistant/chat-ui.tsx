@@ -1,12 +1,12 @@
 "use client";
 
 import { useEffect, useRef, useState, useTransition } from "react";
-import { AudioWaveform, Send, User, AlertCircle } from "lucide-react";
+import { AudioWaveform, Send, User, AlertCircle, Mic, Square } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { cn } from "@/lib/utils";
-import { askAssistantAction } from "@/app/(dashboard)/assistant/actions";
+import { cn, normalizeAssistantText } from "@/lib/utils";
+import { askAssistantAction, transcribeAudioAction } from "@/app/(dashboard)/assistant/actions";
 import type { AssistantMessage } from "@/lib/ai/run-assistant";
 
 const EXAMPLE_PROMPTS = [
@@ -28,7 +28,11 @@ export function AssistantChat({
   const [input, setInput] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
+  const [isRecording, setIsRecording] = useState(false);
+  const [isTranscribing, setIsTranscribing] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const recorderRef = useRef<MediaRecorder | null>(null);
+  const streamRef = useRef<MediaStream | null>(null);
 
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
@@ -46,7 +50,7 @@ export function AssistantChat({
     startTransition(async () => {
       const result = await askAssistantAction(nextMessages);
       if (result.reply) {
-        setMessages((prev) => [...prev, { role: "assistant", text: result.reply! }]);
+        setMessages((prev) => [...prev, { role: "assistant", text: normalizeAssistantText(result.reply!) }]);
       }
       if (result.error) setError(result.error);
     });
@@ -55,6 +59,46 @@ export function AssistantChat({
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     send(input);
+  }
+
+  async function toggleRecording() {
+    if (isRecording) {
+      recorderRef.current?.stop();
+      return;
+    }
+
+    if (!navigator.mediaDevices?.getUserMedia) {
+      setError("Your browser does not support microphone recording.");
+      return;
+    }
+
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const recorder = new MediaRecorder(stream);
+      const chunks: Blob[] = [];
+      recorder.ondataavailable = (event) => {
+        if (event.data.size) chunks.push(event.data);
+      };
+      recorder.onstop = async () => {
+        stream.getTracks().forEach((track) => track.stop());
+        streamRef.current = null;
+        setIsRecording(false);
+        setIsTranscribing(true);
+        const formData = new FormData();
+        formData.append("audio", new Blob(chunks, { type: recorder.mimeType || "audio/webm" }), "recording.webm");
+        const result = await transcribeAudioAction(formData);
+        setIsTranscribing(false);
+        if (result.error) setError(result.error);
+        else if (result.transcript) setInput(result.transcript);
+      };
+      recorderRef.current = recorder;
+      streamRef.current = stream;
+      recorder.start();
+      setIsRecording(true);
+      setError(null);
+    } catch {
+      setError("Microphone access was denied or unavailable.");
+    }
   }
 
   return (
@@ -140,7 +184,18 @@ export function AssistantChat({
           rows={1}
           className="resize-none min-h-10 max-h-32"
         />
-        <Button type="submit" size="icon" disabled={!input.trim() || isPending} loading={isPending}>
+        <Button
+          type="button"
+          size="icon"
+          variant={isRecording ? "destructive" : "outline"}
+          disabled={isPending || isTranscribing}
+          onClick={toggleRecording}
+          aria-label={isRecording ? "Stop recording" : "Record question"}
+          title={isRecording ? "Stop recording" : isTranscribing ? "Transcribing…" : "Record question"}
+        >
+          {isRecording ? <Square className="size-4" /> : <Mic className="size-4" />}
+        </Button>
+        <Button type="submit" size="icon" disabled={!input.trim() || isPending || isTranscribing} loading={isPending}>
           <Send className="size-4" />
           <span className="sr-only">Send</span>
         </Button>

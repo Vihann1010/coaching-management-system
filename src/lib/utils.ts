@@ -5,6 +5,22 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
+export function normalizeAssistantText(text: string) {
+  return text
+    .replace(/```[\s\S]*?```/g, (block) => block.replace(/```[a-z]*\n?/gi, "").replace(/```/g, ""))
+    .replace(/\[([^\]]+)\]\([^\)]+\)/g, "$1")
+    .replace(/`([^`]+)`/g, "$1")
+    .replace(/^\s*#{1,6}\s*/gm, "")
+    .replace(/^\s*>\s?/gm, "")
+    .replace(/^\s*(?:[-*+]\s+|\d+[.)]\s+)/gm, "")
+    .replace(/^\s*(?:[-*_]\s*){3,}$/gm, "")
+    .replace(/\|/g, " ")
+    .replace(/(?:\*\*|__|\*|_)/g, "")
+    .replace(/[ \t]+\n/g, "\n")
+    .replace(/\n{3,}/g, "\n\n")
+    .trim();
+}
+
 export function formatCurrency(amount: number, currency = "INR") {
   return new Intl.NumberFormat("en-IN", {
     style: "currency",

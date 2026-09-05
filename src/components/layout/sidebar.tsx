@@ -46,7 +46,7 @@ export function Sidebar({
   const pathname = usePathname();
 
   const content = (
-    <div className="flex h-full flex-col bg-[var(--brand-900)] text-white">
+    <div className="flex h-full flex-col bg-[var(--sidebar-background)] text-white">
       <div className="flex items-center justify-between px-5 h-16 border-b border-white/10">
         <div className="[&_span]:text-white [&_span]:font-[family-name:var(--font-display)]">
           <LogoWithName name={coachingName} size={28} src={logoSrc} />

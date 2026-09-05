@@ -2,6 +2,7 @@ import { getSessionContext, requireModuleAccess } from "@/lib/session";
 import { PageHeader } from "@/components/shared/page-header";
 import { AssistantChat } from "@/components/assistant/chat-ui";
 import { createClient } from "@/lib/supabase/server";
+import { normalizeAssistantText } from "@/lib/utils";
 import type { AssistantMessage } from "@/lib/ai/run-assistant";
 
 export const dynamic = "force-dynamic";
@@ -16,7 +17,10 @@ export default async function AssistantPage() {
     .eq("user_id", ctx.profile.id)
     .maybeSingle();
   const initialMessages = (Array.isArray(savedConversation?.messages)
-    ? savedConversation.messages.filter(isAssistantMessage)
+    ? savedConversation.messages.filter(isAssistantMessage).map((message) => ({
+        ...message,
+        text: normalizeAssistantText(message.text),
+      }))
     : []) as AssistantMessage[];
 
   return (

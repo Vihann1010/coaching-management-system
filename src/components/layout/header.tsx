@@ -1,8 +1,8 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useState } from "react";
-import { Menu, Search, LogOut, User as UserIcon } from "lucide-react";
+import { useEffect, useState } from "react";
+import { Menu, Search, LogOut, User as UserIcon, Moon, Sun } from "lucide-react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import {
   DropdownMenu, DropdownMenuTrigger, DropdownMenuContent,
@@ -27,6 +27,23 @@ export function Header({
 }) {
   const router = useRouter();
   const [query, setQuery] = useState("");
+  const [darkMode, setDarkMode] = useState(false);
+
+  useEffect(() => {
+    const savedTheme = window.localStorage.getItem("theme");
+    const shouldUseDark = savedTheme === "dark" ||
+      (!savedTheme && window.matchMedia("(prefers-color-scheme: dark)").matches);
+    document.documentElement.classList.toggle("dark", shouldUseDark);
+    const frame = window.requestAnimationFrame(() => setDarkMode(shouldUseDark));
+    return () => window.cancelAnimationFrame(frame);
+  }, []);
+
+  function toggleTheme() {
+    const nextDarkMode = !darkMode;
+    document.documentElement.classList.toggle("dark", nextDarkMode);
+    window.localStorage.setItem("theme", nextDarkMode ? "dark" : "light");
+    setDarkMode(nextDarkMode);
+  }
 
   function handleSearch(e: React.FormEvent) {
     e.preventDefault();
@@ -64,6 +81,16 @@ export function Header({
           </form>
         )}
       </div>
+
+      <button
+        type="button"
+        onClick={toggleTheme}
+        className="flex size-9 items-center justify-center rounded-md text-foreground/70 hover:bg-muted hover:text-foreground cursor-pointer shrink-0"
+        aria-label={darkMode ? "Switch to light mode" : "Switch to dark mode"}
+        title={darkMode ? "Switch to light mode" : "Switch to dark mode"}
+      >
+        {darkMode ? <Sun className="size-4" /> : <Moon className="size-4" />}
+      </button>
 
       <DropdownMenu>
         <DropdownMenuTrigger className="flex items-center gap-2.5 rounded-md p-1.5 pr-2.5 hover:bg-muted cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring shrink-0">

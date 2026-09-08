@@ -26,10 +26,10 @@ export default async function AssistantPage() {
   return (
     <div>
       <PageHeader
-        title="Trippy-Your Ai Staff"
-        description="Ask about students, attendance, fees, or test marks — answered from live data. Read-only: it can't change anything."
+        title="Trippy — Your AI Staff"
+        description="Ask plain questions about students, attendance, fees, or test marks — answers come straight from live data. It can also record fees, attendance, and marks, but only after you confirm."
       />
-      <AssistantChat adminName={ctx.profile.full_name} initialMessages={initialMessages} />
+      <AssistantChat adminName={ctx.profile.full_name} initialMessages={initialMessages} canEdit />
     </div>
   );
 }

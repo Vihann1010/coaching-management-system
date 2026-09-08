@@ -12,7 +12,6 @@ export function DashboardShell({
   navItems,
   fullName,
   role,
-  canSearchStudents,
   children,
 }: {
   coachingName: string;
@@ -20,7 +19,6 @@ export function DashboardShell({
   navItems: SidebarNavItem[];
   fullName: string;
   role: UserRole;
-  canSearchStudents: boolean;
   children: React.ReactNode;
 }) {
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -40,7 +38,6 @@ export function DashboardShell({
           fullName={fullName}
           role={role}
           onOpenMobileMenu={() => setMobileOpen(true)}
-          canSearchStudents={canSearchStudents}
         />
         <main className="flex-1 p-4 lg:p-6 min-w-0">{children}</main>
       </div>

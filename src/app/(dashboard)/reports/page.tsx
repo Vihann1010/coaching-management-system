@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { Suspense } from "react";
 import { Download, TrendingUp, Wallet, AlertCircle, ClipboardList } from "lucide-react";
 import { getSessionContext, requireModuleAccess } from "@/lib/session";
 import { canView } from "@/lib/permissions";
@@ -7,6 +8,7 @@ import { PageHeader } from "@/components/shared/page-header";
 import { StatCard } from "@/components/shared/stat-card";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton";
 import {
   Table, TableHeader, TableBody, TableRow, TableHead, TableCell,
 } from "@/components/ui/table";
@@ -59,10 +61,12 @@ export default async function ReportsPage({
             ))}
           </div>
 
-          {active === "fee-collection" && <FeeCollectionReport />}
-          {active === "pending-fees" && <PendingFeesReport />}
-          {active === "attendance" && <AttendanceReport params={params} />}
-          {active === "test-performance" && <TestPerformanceReport />}
+          <Suspense fallback={<ReportsSkeleton />}>
+            {active === "fee-collection" && <FeeCollectionReport />}
+            {active === "pending-fees" && <PendingFeesReport />}
+            {active === "attendance" && <AttendanceReport params={params} />}
+            {active === "test-performance" && <TestPerformanceReport />}
+          </Suspense>
         </>
       )}
     </div>
@@ -178,8 +182,8 @@ async function AttendanceReport({ params }: { params: Record<string, string | un
   // is `force-dynamic`), not a client render; there's no hydration to
   // desync since the date range is computed once on the server.
   // eslint-disable-next-line react-hooks/purity
-  const from = params.from ?? new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
-  const to = params.to ?? new Date().toISOString().slice(0, 10);
+  const from = params.from ?? new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toLocaleDateString("en-CA");
+  const to = params.to ?? new Date().toLocaleDateString("en-CA");
 
   const { data: rows } = await supabase
     .from("attendance")
@@ -272,6 +276,26 @@ async function TestPerformanceReport() {
           </TableBody>
         </Table>
       )}
+    </div>
+  );
+}
+
+function ReportsSkeleton() {
+  return (
+    <div className="space-y-5">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        {Array.from({ length: 4 }, (_, index) => (
+          <Skeleton key={index} className="h-24" />
+        ))}
+      </div>
+      <div className="overflow-hidden rounded-lg border border-border bg-card">
+        <Skeleton className="h-12 w-full rounded-none" />
+        <div className="space-y-3 p-4">
+          {Array.from({ length: 5 }, (_, index) => (
+            <Skeleton key={index} className="h-10 w-full" />
+          ))}
+        </div>
+      </div>
     </div>
   );
 }

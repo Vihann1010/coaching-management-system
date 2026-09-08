@@ -53,6 +53,21 @@ export async function transcribeAudioAction(formData: FormData): Promise<SpeechR
 }
 
 
+export async function clearChatAction(): Promise<{ error?: string }> {
+  const ctx = await getSessionContext();
+  if (ctx.profile.role !== "admin") {
+    return { error: "Only an admin can use the assistant." };
+  }
+
+  const supabase = await createClient();
+  const { error } = await supabase.from("assistant_conversations").upsert(
+    { user_id: ctx.profile.id, messages: [], updated_at: new Date().toISOString() },
+    { onConflict: "user_id" }
+  );
+
+  return error ? { error: "The chat could not be cleared." } : {};
+}
+
 export async function askAssistantAction(history: AssistantMessage[]): Promise<AskAssistantResult> {
   const ctx = await getSessionContext();
 

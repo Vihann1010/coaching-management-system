@@ -1,3 +1,4 @@
+import { cache } from "react";
 import { createClient } from "@/lib/supabase/server";
 import type { AppSettings } from "@/types/database";
 
@@ -16,7 +17,7 @@ const DEFAULTS: AppSettings = {
  * call from the (public) login page as well as authenticated pages —
  * see the app_settings_select RLS policy.
  */
-export async function getAppSettings(): Promise<AppSettings> {
+export const getAppSettings = cache(async function getAppSettings(): Promise<AppSettings> {
   try {
     const supabase = await createClient();
     const { data, error } = await supabase.from("app_settings").select("key, value");
@@ -38,4 +39,4 @@ export async function getAppSettings(): Promise<AppSettings> {
     // every page.
     return DEFAULTS;
   }
-}
+});

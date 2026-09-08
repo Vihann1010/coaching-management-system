@@ -27,7 +27,6 @@ export default async function DashboardLayout({ children }: { children: React.Re
       navItems={navItems}
       fullName={ctx.profile.full_name}
       role={ctx.profile.role}
-      canSearchStudents={canView(permCtx, "students")}
     >
       {children}
     </DashboardShell>

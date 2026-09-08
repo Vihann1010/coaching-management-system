@@ -1,3 +1,4 @@
+import { cache } from "react";
 import { createClient } from "@/lib/supabase/server";
 import type { Profile, PermissionModule } from "@/types/database";
 import { canView as checkView, canEdit as checkEdit } from "@/lib/permissions";
@@ -16,7 +17,7 @@ export interface SessionContext {
  * is no session, and to a friendly error state if the profile row is
  * missing (should not normally happen — see handle_new_user() trigger).
  */
-export async function getSessionContext(): Promise<SessionContext> {
+export const getSessionContext = cache(async function getSessionContext(): Promise<SessionContext> {
   const supabase = await createClient();
   const {
     data: { user },
@@ -62,7 +63,7 @@ export async function getSessionContext(): Promise<SessionContext> {
   }
 
   return { userId: user.id, profile: profile as Profile, staffPermissions, teacherBatchIds };
-}
+});
 
 /** Redirects home with a "not authorized" flag if the module check fails. */
 export function requireModuleAccess(

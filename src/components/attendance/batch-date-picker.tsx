@@ -9,9 +9,13 @@ import type { Batch } from "@/types/database";
 export function BatchDatePicker({
   batches,
   today,
+  selectedBatchId,
 }: {
   batches: Pick<Batch, "id" | "name" | "code">[];
   today: string;
+  /** The batch the server page actually resolved (first batch when the
+   *  URL has none) so the Select reflects it instead of a placeholder. */
+  selectedBatchId?: string;
 }) {
   const router = useRouter();
   const pathname = usePathname();
@@ -19,7 +23,10 @@ export function BatchDatePicker({
 
   function setParam(key: string, value: string) {
     const params = new URLSearchParams(searchParams.toString());
-    params.set(key, value);
+    // Clearing the date input sends "" — remove the param so the page
+    // falls back to today, instead of querying a blank date.
+    if (value) params.set(key, value);
+    else params.delete(key);
     router.push(`${pathname}?${params.toString()}`);
   }
 
@@ -27,7 +34,10 @@ export function BatchDatePicker({
     <div className="flex flex-wrap items-end gap-4 mb-6">
       <div className="space-y-1.5">
         <Label>Batch</Label>
-        <Select value={searchParams.get("batch") ?? ""} onValueChange={(v) => setParam("batch", v)}>
+        <Select
+          value={searchParams.get("batch") ?? selectedBatchId ?? ""}
+          onValueChange={(v) => setParam("batch", v)}
+        >
           <SelectTrigger className="w-56"><SelectValue placeholder="Select a batch" /></SelectTrigger>
           <SelectContent>
             {batches.map((b) => (

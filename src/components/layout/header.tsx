@@ -1,14 +1,12 @@
 "use client";
 
-import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { Menu, Search, LogOut, User as UserIcon, Moon, Sun } from "lucide-react";
+import { Menu, LogOut, User as UserIcon, Moon, Sun } from "lucide-react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import {
   DropdownMenu, DropdownMenuTrigger, DropdownMenuContent,
   DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
-import { Input } from "@/components/ui/input";
 import { initials } from "@/lib/utils";
 import { roleLabel } from "@/lib/permissions";
 import type { UserRole } from "@/types/database";
@@ -18,15 +16,11 @@ export function Header({
   fullName,
   role,
   onOpenMobileMenu,
-  canSearchStudents,
 }: {
   fullName: string;
   role: UserRole;
   onOpenMobileMenu: () => void;
-  canSearchStudents: boolean;
 }) {
-  const router = useRouter();
-  const [query, setQuery] = useState("");
   const [darkMode, setDarkMode] = useState(false);
 
   useEffect(() => {
@@ -45,13 +39,6 @@ export function Header({
     setDarkMode(nextDarkMode);
   }
 
-  function handleSearch(e: React.FormEvent) {
-    e.preventDefault();
-    if (query.trim()) {
-      router.push(`/students?search=${encodeURIComponent(query.trim())}`);
-    }
-  }
-
   return (
     <header className="sticky top-0 z-30 flex h-16 items-center gap-3 border-b border-border bg-card px-4 lg:px-6">
       <button
@@ -62,25 +49,7 @@ export function Header({
         <Menu className="size-5" />
       </button>
 
-      {/* Single flexible region for the search bar (or empty space when
-          search isn't available) — avoids two competing flex-1 elements
-          that used to cramp the input on narrow phone screens. */}
-      <div className="flex-1 min-w-0">
-        {canSearchStudents && (
-          <form onSubmit={handleSearch} className="max-w-md">
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
-              <Input
-                value={query}
-                onChange={(e) => setQuery(e.target.value)}
-                placeholder="Search students…"
-                className="pl-9 h-9"
-                aria-label="Search students, parents, phone number, or student ID"
-              />
-            </div>
-          </form>
-        )}
-      </div>
+      <div className="flex-1" />
 
       <button
         type="button"

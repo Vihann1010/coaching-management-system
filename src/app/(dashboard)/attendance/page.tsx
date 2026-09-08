@@ -26,7 +26,10 @@ export default async function AttendancePage({
   );
 
   const { batch: batchParam, date: dateParam } = await searchParams;
-  const today = new Date().toISOString().slice(0, 10);
+  // Local-timezone "today" (YYYY-MM-DD). toISOString() would give the UTC
+  // date, which is the previous day for UTC+5:30 users between midnight
+  // and 5:30 AM — making today's attendance impossible to mark.
+  const today = new Date().toLocaleDateString("en-CA");
   const attendanceDate = dateParam ?? today;
 
   const supabase = await createClient();
@@ -88,12 +91,13 @@ export default async function AttendancePage({
         }
       />
 
-      <BatchDatePicker batches={batches} today={today} />
+      <BatchDatePicker batches={batches} today={today} selectedBatchId={batchId} />
 
       {!batchId || !students ? (
         <EmptyState icon={Layers} title="Select a batch to begin" />
       ) : canMark ? (
         <AttendanceForm
+          key={`${batchId}-${attendanceDate}`}
           batchId={batchId}
           attendanceDate={attendanceDate}
           students={students}

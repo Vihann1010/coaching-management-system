@@ -125,8 +125,9 @@ export function AssistantChat({
   const recorderRef = useRef<MediaRecorder | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
 
-  // Only auto-scroll when the user is already near the bottom, so reading
-  // older messages while a reply streams in never yanks the viewport away.
+  // Only auto-scroll when the user is already near the bottom. If they scroll
+  // upward to read older messages, keep their position stable instead of
+  // snapping back to the latest reply.
   function handleScroll() {
     const element = scrollRef.current;
     if (!element) return;
@@ -134,9 +135,8 @@ export function AssistantChat({
   }
 
   useEffect(() => {
-    if (nearBottomRef.current) {
-      scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
-    }
+    if (!nearBottomRef.current) return;
+    scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
   }, [messages, isPending]);
 
   function send(text: string) {
